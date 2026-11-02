@@ -1,0 +1,6 @@
+{
+  "name": "Email Reply Assistant",
+  "description": "Reply smarter. Write faster. AI-powered Chrome Extension for contextual email replies and Gmail integration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

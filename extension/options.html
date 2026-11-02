@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - Email Reply Assistant</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #111827;
+      --border: #1f2937;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --accent: #6366f1;
+      --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      max-width: 640px;
+      width: 100%;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      width: 40px;
+      height: 40px;
+      background: var(--accent-gradient);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    h1 { font-size: 20px; font-weight: 700; }
+    p.subtitle { color: var(--text-muted); font-size: 13px; }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .card h2 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #ffffff;
+    }
+    .card p.desc {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+    select, input[type="text"] {
+      background: #0f1523;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+    }
+    select:focus, input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .save-btn {
+      background: var(--accent-gradient);
+      color: #fff;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .save-btn:hover {
+      opacity: 0.95;
+    }
+    .alert-success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #86efac;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .guest-badge {
+      display: inline-block;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: #1e293b;
+      color: #94a3b8;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
+          <rect width="20" height="16" x="2" y="4" rx="3"></rect>
+          <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+        </svg>
+      </div>
+      <div>
+        <h1>Email Reply Assistant Settings</h1>
+        <p class="subtitle">Customize defaults, language and AI proxy connection</p>
+      </div>
+    </div>
+
+    <div id="saveAlert" class="alert-success">Preferences saved successfully!</div>
+
+    <!-- Preferences Card -->
+    <div class="card">
+      <h2>Reply Defaults</h2>
+      <p class="desc">Set your preferred baseline tone, length, and language for all new reply generations.</p>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="prefTone">Default Tone</label>
+          <select id="prefTone">
+            <option value="Professional">Professional</option>
+            <option value="Friendly">Friendly</option>
+            <option value="Casual">Casual</option>
+            <option value="Formal">Formal</option>
+            <option value="Persuasive">Persuasive</option>
+            <option value="Apologetic">Apologetic</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="prefLength">Default Reply Length</label>
+          <select id="prefLength">
+            <option value="Short">Short (1-2 paragraphs)</option>
+            <option value="Medium">Medium (Balanced)</option>
+            <option value="Detailed">Detailed (Thorough)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="prefLanguage">Language Preference</label>
+        <select id="prefLanguage">
+          <option value="English">English</option>
+          <option value="Spanish">Spanish</option>
+          <option value="French">French</option>
+          <option value="German">German</option>
+          <option value="Portuguese">Portuguese</option>
+          <option value="Italian">Italian</option>
+          <option value="Japanese">Japanese</option>
+          <option value="Mandarin">Mandarin</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Security & Proxy Card -->
+    <div class="card">
+      <h2>API & Security Configuration</h2>
+      <p class="desc">In production Manifest V3, API calls route through your secure backend proxy to prevent exposing Gemini credentials in client bundles.</p>
+      
+      <span class="guest-badge">🔒 Guest-Only Experience • Zero Sign-in Required</span>
+
+      <div class="form-group">
+        <label for="prefProxyUrl">Backend Proxy URL</label>
+        <input type="text" id="prefProxyUrl" placeholder="https://your-domain.run.app">
+        <small style="color:var(--text-muted); font-size:11.5px;">Defaults to the current hosting origin with pre-configured Gemini API proxy.</small>
+      </div>
+    </div>
+
+    <button id="saveBtn" class="save-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      <span>Save Preferences</span>
+    </button>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
