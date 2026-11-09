@@ -7,16 +7,16 @@ export const EXTENSION_FILES: Record<string, string> = {
   "version": "1.1.0",
   "description": "Reply smarter. Write faster. AI-powered email assistant with seamless Gmail integration using Google Gemini API.",
   "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
   },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
-      "128": "icons/icon128.png"
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
     },
     "default_title": "Email Reply Assistant"
   },
@@ -155,20 +155,24 @@ export async function downloadExtensionZip(): Promise<void> {
 
   zip.file('README.md', EXTENSION_FILES['README.md']);
 
-  // Add icon files
-  const iconsFolder = zip.folder('icons');
-  if (iconsFolder) {
-    try {
-      const iconRes = await fetch('/extension/icons/icon16.png');
-      if (iconRes.ok) {
-        const iconBlob = await iconRes.blob();
+  // Add icon files to both root and icons/ folder for absolute compatibility
+  try {
+    const iconRes = await fetch('/extension/icon16.png');
+    if (iconRes.ok) {
+      const iconBlob = await iconRes.blob();
+      zip.file('icon16.png', iconBlob);
+      zip.file('icon48.png', iconBlob);
+      zip.file('icon128.png', iconBlob);
+
+      const iconsFolder = zip.folder('icons');
+      if (iconsFolder) {
         iconsFolder.file('icon16.png', iconBlob);
         iconsFolder.file('icon48.png', iconBlob);
         iconsFolder.file('icon128.png', iconBlob);
       }
-    } catch {
-      // Ignored
     }
+  } catch {
+    // Ignored
   }
 
   const zipBlob = await zip.generateAsync({ type: 'blob' });
