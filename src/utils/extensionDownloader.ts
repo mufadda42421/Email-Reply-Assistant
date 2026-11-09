@@ -25,13 +25,13 @@ export const EXTENSION_FILES: Record<string, string> = {
     "open_in_tab": true
   },
   "background": {
-    "service_worker": "background.js",
-    "type": "module"
+    "service_worker": "background.js"
   },
   "permissions": [
     "storage",
     "activeTab",
-    "clipboardWrite"
+    "clipboardWrite",
+    "contextMenus"
   ],
   "host_permissions": [
     "https://mail.google.com/*",
@@ -53,30 +53,67 @@ export const EXTENSION_FILES: Record<string, string> = {
     }
   ]
 }`,
+  'background.js': `/**
+ * Email Reply Assistant - Background Service Worker (Manifest V3)
+ */
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.storage.sync.get(['defaultTone', 'defaultLength', 'defaultLanguage'], (result) => {
+    const defaults = {};
+    if (!result.defaultTone) defaults.defaultTone = 'Professional';
+    if (!result.defaultLength) defaults.defaultLength = 'Medium';
+    if (!result.defaultLanguage) defaults.defaultLanguage = 'English';
+
+    if (Object.keys(defaults).length > 0) {
+      chrome.storage.sync.set(defaults);
+    }
+  });
+
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: 'era_reply_selection',
+      title: 'Generate Reply with Email Assistant',
+      contexts: ['selection'],
+    });
+  });
+});
+
+chrome.contextMenus.onClicked.addListener((info) => {
+  if (info.menuItemId === 'era_reply_selection' && info.selectionText) {
+    chrome.storage.local.set({ lastSelectedText: info.selectionText }, () => {
+      if (chrome.action && typeof chrome.action.openPopup === 'function') {
+        chrome.action.openPopup().catch(() => {});
+      }
+    });
+  }
+});
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'PING') {
+    sendResponse({ status: 'PONG', version: '1.1.0' });
+    return true;
+  }
+});`,
   'README.md': `# Email Reply Assistant - Chrome Extension (Manifest V3)
 Reply smarter. Write faster.
 
-## Quick Installation Instructions (30 seconds):
-1. Unzip the downloaded file: \`email-reply-assistant.zip\`.
-2. Open Google Chrome and navigate to: \`chrome://extensions\`.
-3. In the top-right corner, turn ON **"Developer mode"**.
-4. In the top-left corner, click **"Load unpacked"**.
-5. Select the unzipped folder containing \`manifest.json\`.
-6. Done! Open Gmail or click the extension puzzle piece icon to start replying!
+## IMPORTANT FOLDER SELECTION NOTE FOR CHROME:
+When you unzip this archive, make sure you open the folder where "manifest.json" is directly located!
+If you see an error like "Could not load manifest" or "Could not load background script ''", you have selected the outer parent folder instead of the folder containing "manifest.json".
 
-## Features:
-- 3 contextual alternative replies for every email.
-- Gmail composition detection and one-click draft insertion.
-- Quick email polishing: Grammar fix, executive professional tone, concise reduction, and warm friendliness.
-- Powered by Google Gemini API.
-- 100% Guest-only, zero sign-in required.
+### Quick Installation:
+1. Extract "email-reply-assistant.zip".
+2. Open Google Chrome and go to: chrome://extensions
+3. Turn ON "Developer mode" in the top-right corner.
+4. Click "Load unpacked" in the top-left corner.
+5. Select the folder that directly contains "manifest.json", "background.js", and "popup.html".
+6. Done! Open Gmail or click the extension puzzle piece icon.
 `,
 };
 
 export async function downloadExtensionZip(): Promise<void> {
   const zip = new JSZip();
 
-  // Try fetching existing server extension files or pack directly
+  // Try fetching the complete extension zip from the server
   try {
     const res = await fetch('/api/extension/download');
     if (res.ok) {
@@ -88,21 +125,46 @@ export async function downloadExtensionZip(): Promise<void> {
     console.warn('Server zip download endpoint unavailable, generating via JSZip...', err);
   }
 
-  // Fallback: Generate dynamically with JSZip
-  for (const [filename, content] of Object.entries(EXTENSION_FILES)) {
-    zip.file(filename, content);
+  // Fallback: Fetch each file from the /extension/ public directory
+  const filesToFetch = [
+    'manifest.json',
+    'background.js',
+    'popup.html',
+    'popup.css',
+    'popup.js',
+    'content.js',
+    'content.css',
+    'options.html',
+    'options.js',
+  ];
+
+  for (const filename of filesToFetch) {
+    try {
+      const fileRes = await fetch(`/extension/${filename}`);
+      if (fileRes.ok) {
+        const text = await fileRes.text();
+        zip.file(filename, text);
+        continue;
+      }
+    } catch {}
+
+    if (EXTENSION_FILES[filename]) {
+      zip.file(filename, EXTENSION_FILES[filename]);
+    }
   }
 
-  // Add sample PNG icon placeholders if missing
+  zip.file('README.md', EXTENSION_FILES['README.md']);
+
+  // Add icon files
   const iconsFolder = zip.folder('icons');
   if (iconsFolder) {
     try {
-      const icon16Res = await fetch('/extension/icons/icon16.png');
-      if (icon16Res.ok) {
-        const icon16Blob = await icon16Res.blob();
-        iconsFolder.file('icon16.png', icon16Blob);
-        iconsFolder.file('icon48.png', icon16Blob);
-        iconsFolder.file('icon128.png', icon16Blob);
+      const iconRes = await fetch('/extension/icons/icon16.png');
+      if (iconRes.ok) {
+        const iconBlob = await iconRes.blob();
+        iconsFolder.file('icon16.png', iconBlob);
+        iconsFolder.file('icon48.png', iconBlob);
+        iconsFolder.file('icon128.png', iconBlob);
       }
     } catch {
       // Ignored

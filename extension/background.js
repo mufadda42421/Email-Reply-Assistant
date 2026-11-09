@@ -2,8 +2,8 @@
  * Email Reply Assistant - Background Service Worker (Manifest V3)
  */
 
-chrome.runtime.onInstalled.addListener((details) => {
-  // Set default settings
+chrome.runtime.onInstalled.addListener(() => {
+  // Set default preferences in storage
   chrome.storage.sync.get(['defaultTone', 'defaultLength', 'defaultLanguage'], (result) => {
     const defaults = {};
     if (!result.defaultTone) defaults.defaultTone = 'Professional';
@@ -15,21 +15,22 @@ chrome.runtime.onInstalled.addListener((details) => {
     }
   });
 
-  // Create context menu for selected email text
-  chrome.contextMenus.create({
-    id: 'era_reply_selection',
-    title: 'Generate Reply with Email Assistant',
-    contexts: ['selection'],
+  // Remove existing context menu before creating to prevent duplicate ID errors on reload
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: 'era_reply_selection',
+      title: 'Generate Reply with Email Assistant',
+      contexts: ['selection'],
+    });
   });
 });
 
 // Context menu click listener
-chrome.contextMenus.onClicked.addListener((info, tab) => {
+chrome.contextMenus.onClicked.addListener((info) => {
   if (info.menuItemId === 'era_reply_selection' && info.selectionText) {
     chrome.storage.local.set({ lastSelectedText: info.selectionText }, () => {
-      // In Manifest V3, we can open the action popup programmatically where supported
-      if (chrome.action && chrome.action.openPopup) {
-        chrome.action.openPopup();
+      if (chrome.action && typeof chrome.action.openPopup === 'function') {
+        chrome.action.openPopup().catch(() => {});
       }
     });
   }
@@ -38,7 +39,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 // Message listener for content scripts
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'PING') {
-    sendResponse({ status: 'PONG', version: '1.0.0' });
+    sendResponse({ status: 'PONG', version: '1.1.0' });
     return true;
   }
 });
